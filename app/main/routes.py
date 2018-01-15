@@ -1,4 +1,3 @@
-
 from flask import render_template, redirect, url_for, abort, flash, request, \
 current_app, make_response
 
@@ -18,4 +17,5 @@ def index():
         db.session.add(product)
         db.session.commit()
         return redirect(url_for('.index'))
-    return render_template('index.html', form=form)
+    products = Product.query.all()
+    return render_template('index.html', form=form, products=products)

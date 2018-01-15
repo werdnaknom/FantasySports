@@ -9,14 +9,20 @@
 
 	{{ wtf.quick_form(form) }}
 
+	<br>
+
 	<body>
 		<table class= "table table-hover">
 			<tr>
-				<th>Table Header!</th>
+				<th>Product ID</th>
+				<th>Name</th>
 			</tr>
+			{% for p in products %}
 			<tr>
-				<td> Table Data!</td>
+				<td>{{ p.id }} </td>
+				<td>{{ p.name }} </td>
 			</tr>
+			{% endfor %}
 		</table>
 	</body>
 
