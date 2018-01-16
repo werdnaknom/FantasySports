@@ -11,11 +11,17 @@ from app import db
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
+    products = Product.query.all()
+    return render_template('index.html', products=products)
+
+@main.route('/addProduct', methods=['GET', 'POST'])
+def addProduct():
+    title = "Add Product"
     form = CreateProductForm()
     if form.validate_on_submit():
         product = Product(name=form.name.data)
         db.session.add(product)
         db.session.commit()
         return redirect(url_for('.index'))
-    products = Product.query.all()
-    return render_template('index.html', form=form, products=products)
+    return render_template('basic_form.html', form=form, title=title) 
+
