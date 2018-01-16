@@ -1,0 +1,85 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}Products Database{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<link rel="stylesheet" href="https://getbootstrap.com/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" type="text/css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+{% endblock %}
+
+{% block content %}
+
+{% include "header.html" %}
+<div class="container-fluid">
+	<div class="row">
+		<nav class="col-sm-3 col-md-2 d-none d-sm-block bg-light sidebar">
+			<ul class="nav nav-pills flex-column">
+				<li class="nav-item">
+					<a class="nav-link" href="{{ url_for('main.addProduct')}} ">Add Product</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="#">Add HW Revision</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="#">Add FW Revision</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="#">Add SW Revision</a>
+				</li>
+			</ul>
+
+			<ul class="nav nav-pills flex-column">
+				<li class="nav-item">
+					<a class="nav-link" href="#">Nav Item</a>
+				</li> 
+				<li class="nav-item">
+					<a class="nav-link" href="#">Nav Item</a>
+				</li> 
+				<li class="nav-item">
+					<a class="nav-link" href="#">Nav Item</a>
+				</li> 
+			</ul>
+
+
+			<ul class="nav nav-pills flex-column">
+				<li class="nav-item">
+					<a class="nav-link" href="#">Nav Item</a>
+				</li> 
+				<li class="nav-item">
+					<a class="nav-link" href="#">Nav Item</a>
+				</li> 
+				<li class="nav-item">
+					<a class="nav-link" href="#">Nav Item</a>
+				</li> 
+			</ul>
+		</nav>
+
+
+		<main role="main" class="col-sm-9 ml-sm-auto col-md-10 pt-3">
+
+			<div class="row text-center" margin-top="auto">
+				{% for message in get_flashed_messages() %}
+				<div class="alert alert-warning">
+					<button type="button" class="close" data-dismiss="alert">&times;</button>
+					{{ message }}
+				</div>
+				{% endfor %}
+				{% block page_content %}
+				{% endblock %}
+			</div>
+		</main>
+	</div>
+</div>
+{% endblock %}
+
+																				  </div>
+</div>
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}
