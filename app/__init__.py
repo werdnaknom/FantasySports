@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
+from flask_restful import Api
 
 from config import config
 
@@ -15,10 +16,16 @@ def create_app(config_name):
 
     bootstrap.init_app(app)
     db.init_app(app)
+    api = Api(app)
 
 
     from app.main import main as main_blueprint
     app.register_blueprint(main_blueprint)
+
+    from app.api.routes import Test
+    api.add_resource(Test, '/api/test/<int:id>')
+
+
 
 
     return app
