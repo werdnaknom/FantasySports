@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% import "_macros.html" as macros %}
+{% block title %} {{product.name, product.customer }} {% endblock %}
+
+{% block page_content %}
+		<h1> Active Samples for {{product.name, product.customer}} </h1>
+
+		<div>
+			#TODO! Need to add javascript here to query product
+		</div>	
+
+		<h1>Product Information </h1>
+		{{product.id}} <br>
+		{{product.name}}<br>
+		{{product.baseSerial}}<br>
+		{{product.customer}} <br>
+		{{product.description}}<br>
+		{{product.silicon.count()}}<br>
+		{{product.samples.count()}}<br>
+		{{product.hw_revisions.count()}}<br>
+
+
+{% endblock %}
+
