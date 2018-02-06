@@ -36,7 +36,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/ammonk/python_projects/FantasySports/FantasySports/venv"
+set -gx VIRTUAL_ENV "/home/ammonk/python_projects/TestTemplateWebsite/TestTemplateWebsite/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

@@ -5,7 +5,9 @@ from app.main import main
 from app.main.forms import CreateProductForm, CreateSiliconForm, CreateSampleForm
 
 from app.models import Product, Silicon, ProductSilicon, Sample, \
-        HardwareRevision, SoftwareComponent, SoftwareRevision, HardwareSoftware
+        HardwareRevision, SoftwareComponent, SoftwareRevision, \
+        HardwareSoftware, Test, TestID, TestRun, TestData
+
 
 from app import db
 
@@ -20,7 +22,9 @@ def index():
 @main.route('/product/<int:product_id>', methods=['GET', 'POST'])
 def product(product_id):
     product = Product.query.filter_by(id=product_id).first_or_404()
-    return render_template('product.html', product=product)
+    return render_template('product.html', product=product,
+                           Silicon=Silicon,
+                           HardwareRevision = HardwareRevision)
 
 
 @main.route('/addSilicon', methods=['GET', 'POST'])
@@ -86,6 +90,7 @@ def addProduct():
         return redirect(url_for('.product',product_id=product.id))
     return render_template('basic_form.html', form=form, title=title) 
 
+
 @main.route('/addSample/<int:product_id>', methods=['GET', 'POST'])
 def addSample(product_id):
     title = "Add Sample"
@@ -101,3 +106,36 @@ def addSample(product_id):
 
         return redirect(url_for('.index'))
     return render_template('basic_form.html', form=form, title=title)
+
+
+@main.route('/sample/<int:sample_id>', methods=['GET', 'POST'])
+def sample(sample_id):
+    title = "Sample ID #%d" % sample_id
+
+    sample = Sample.query.filter_by(id=sample_id).first_or_404()
+    return render_template('sample.html', title=title, sample=sample,
+                          HardwareRevision = HardwareRevision,
+                          Test = Test)
+
+
+
+@main.route('/hardwarerevision/<int:hardware_revision>',
+            methods=['GET', 'POST'])
+def hardware_revision(hardware_revision):
+    title = "Sample ID #%d" % sample_id
+
+    sample = Sample.query.filter_by(id=sample_id).first_or_404()
+    return render_template('hardware_revision.html')
+
+
+
+@main.route('/testid/<int:testid_id>', methods=['GET', 'POST'])
+def testid(testid_id):
+    title = "Test ID #%d" % testid_id
+
+    testid = TestID.query.filter_by(id=testid_id).first_or_404()
+    print(testid)
+    print(testid.id)
+    print(testid.test_rows.all())
+    return render_template('testid.html', title=title, testid=testid)
+

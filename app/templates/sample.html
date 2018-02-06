@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% import "_macros.html" as macros %}
+{% block title %} {{ title }} {% endblock %}
+
+{% block page_content %}
+	<h1> Sample {{sample.serial}}</h1>
+
+	<h3> Sample Hardware Revisions</h3>
+	<table class="table table-hover">
+		<tr>
+			<th>#</th>
+			<th>Revision Base IPN</th>
+			<th>Rework Number</th>
+			<th>Rework Description</th>
+		</tr>
+		{% for samplehw in sample.hardware_revisions.all() %}
+		{% set hwrev = HardwareRevision.query.filter_by(id=samplehw.hw_revision_id).first_or_404() %}
+		<tr>
+			<td> {{loop.index }} </td>
+			<td> {{hwrev.ipn }} </td>
+			<td> {{hwrev.reworkNumber }}</td>
+			<td> {{hwrev.description }} </td>
+		</tr>
+		{% endfor %}
+	<h3> Test ID's Run on Sample</h3>
+	<table class="table table-hover">
+		<tr>
+			<th>#</th>
+			<th>Date</th>
+			<th>Hardware Revision</th>
+			<th>Test Name</th>
+			<th>Test ID</th>
+		</tr>
+		{% for tid in sample.test_ids.all() %}
+		<tr>
+			<td> {{loop.index }} </td>
+			<td> {{tid.created_date }} </td>
+			<td> {{tid.hardware_revision_id }} </td>
+			{% set test = Test.query.filter_by(id=tid.test_id).first_or_404() %}
+			<td> {{test.name }} </td>
+			<td> 
+				<a href={{url_for('main.testid',
+					testid_id=tid.id)}}>
+				{{tid.id }} 
+			</td>
+		</tr>
+		{% endfor %}
+
+{% endblock %}
+

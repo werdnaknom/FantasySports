@@ -17,10 +17,108 @@
 		{{product.baseSerial}}<br>
 		{{product.customer}} <br>
 		{{product.description}}<br>
-		{{product.silicon.count()}}<br>
-		{{product.samples.count()}}<br>
-		{{product.hw_revisions.count()}}<br>
+		<h3>Product Silicon</h3>
+		    <div class="table-responsive">
+			    <table class="table table-striped table-sm">
+				    <thead>
+					    <tr>
+						    <th>#</th>
+						    <th>Silicon</th>
+						    <th>Product Code</th>
+						    <th>Description</th>
+					    </tr>
+				    </thead>
+				    <tbody>
+				    {% for s in product.silicon %}
+				    {% set silicon = Silicon.query.filter_by(id=s.silicon_id).first_or_404() %}
+					    <tr>
+						    <td>{{loop.index}}</td>
+						    <td>{{silicon.codename}}</td>
+						    <td>{{silicon.productCode}}</td>
+						    <td>{{silicon.description}}</td>
+					    </tr>
+				    {% endfor %}
+				    </tbody>
+			    </table>
+		    </div>
 
-
+		<h3>Samples</h3>
+		    <div class="table-responsive">
+			    <table class="table table-striped table-sm">
+				    <thead>
+					    <tr>
+						    <th>#</th>
+						    <th>Sample Serial #</th>
+						    <th>HW Revisions</th>
+						    <th>TestIDs</th>
+					    </tr>
+				    </thead>
+				    <tbody>
+				    {% for s in product.samples %}
+					    <tr>
+						    <td>{{loop.index}}</td>
+						    <td>
+							    <a href={{url_for('main.sample', sample_id=s.id)}}> {{s.serial}} </a>
+						    </td>
+						    {% for swhw in s.hardware_revisions.all() %}
+						    {% set hwrev = HardwareRevision.query.filter_by(id = swhw.hw_revision_id).first_or_404() %}
+						        <td>
+								<a href={{url_for('main.hardware_revision',
+	      hardware_revision=hwrev.id)}}> {{hwrev.reworkNumber}} </a>
+							</td>
+						    {% endfor %}
+						    <td>
+						    {% if s.test_ids.all() %}
+						    	{% for testid in s.test_ids.all() %}
+							<a href={{url_for('main.testid',
+	      testid_id= testid.id) }}> {{testid.id}} </a>
+							{% endfor %}
+						    {% else %}
+						    	None
+						    {% endif %}
+						    </td>
+					    </tr>
+				    {% endfor %}
+				    </tbody>
+			    </table>
+		    </div>
+		<h3>Hardware Revisions</h3>
+		    <div class="table-responsive">
+			    <table class="table table-striped table-sm">
+				    <thead>
+					    <tr>
+						    <th>#</th>
+						    <th>IPN</th>
+						    <th>Rework Number</th>
+						    <th>Description</th>
+						    <th>TestIDs</th>
+					    </tr>
+				    </thead>
+				    <tbody>
+				    {% for hwrev in product.hw_revisions %}
+					    <tr>
+						    <td>{{loop.index}}</td>
+						    <td>{{hwrev.ipn}}</td>
+						    <td>
+								<a href={{url_for('main.hardware_revision',
+	      hardware_revision=hwrev.id)}}> {{hwrev.reworkNumber}} </a>
+	      								
+	      					    </td>
+						    <td>{{hwrev.description}}</td>
+						    <td>
+						    {% if hwrev.test_ids.all() %}
+						    	{% for testid in hwrev.test_ids.all() %}
+							<a href={{url_for('main.testid',
+	      testid_id= testid.id) }}> {{testid.id}} </a>
+							{% endfor %}
+						    {% else %}
+						    	None
+						    {% endif %}
+						    </td>
+					    </tr>
+				    {% endfor %}
+				    </tbody>
+			    </table>
+		    </div>
 {% endblock %}
 

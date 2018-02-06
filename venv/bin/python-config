@@ -1,4 +1,4 @@
-#!/home/ammonk/python_projects/FantasySports/FantasySports/venv/bin/python
+#!/home/ammonk/python_projects/TestTemplateWebsite/TestTemplateWebsite/venv/bin/python
 
 import sys
 import getopt
