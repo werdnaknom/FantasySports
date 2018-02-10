@@ -1,5 +1,5 @@
 from flask_restful import Resource, abort, fields, marshal_with, reqparse, Api
-import request
+from flask import request
 from app.api import status
 from app import db
 from sqlalchemy.exc import SQLAlchemyError
@@ -40,33 +40,42 @@ class TestID(Resource):
     def get(self, id):
         testid = models.TestID.query.get_or_404(id)
         return testid.to_json()
+api_api.add_resource(TestID, '/testid/<int:id>')
+
+class TestIDList(Resource):
+    def get(self):
+        #TODO
+        return {"TestID" : "List Not Here"}
 
     def post(self):
-        return {"Post" : "Post"}
-api_api.add_resource(TestID, '/testid/<int:id>')
+        request_dict = request.get_json()
+        print("----"*4)
+        print(request_dict)
+        print("----"*4)
+        return models.TestID.from_json(request_dict)
+api_api.add_resource(TestIDList, '/testid')
 
 class TestRow(Resource):
     def get(self, id):
-        tr = models.TestRun.query.get_or_404(id)
+        tr = models.TestRow.query.get_or_404(id)
         return tr.to_json()
 api_api.add_resource(TestRow, '/testrow/<int:id>')
+
+class TestRowList(Resource):
+    def post(self):
+        request_dict = request.get_json()
+        return models.TestRow.from_json(request_dict)
+api_api.add_resource(TestRowList, '/testrow')
 
 class TestData(Resource):
     def get(self, id):
         td = models.TestData.query.get_or_404(id)
         return td.to_json()
+api_api.add_resource(TestData, '/testdata/<int:id>')
 
+class TestDataList(Resource):
     def post(self):
         request_dict = request.get_json()
-        if not request_dict:
-            response = {"message" : "No input data provided"}
-            return response, status.HTTP_400_BAD_REQUEST
-        try:
-            #TODO: Database entry
-            print("Hello")
-        except SQLAlchemy as e:
-            db.session.rollback()
-            resp = jsonify({"error" : str(e)})
-            return resp, status.HTTP_400_BAD_REQUEST
-api_api.add_resource(TestData, '/testdata/<int:id>')
+        return models.TestData.from_json(request_dict)
+api_api.add_resource(TestDataList, '/testdata')
 

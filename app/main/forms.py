@@ -3,7 +3,7 @@ from wtforms import StringField, TextAreaField, BooleanField, SelectField, \
 SubmitField
 from wtforms.validators import DataRequired, Length, Email, Regexp
 from wtforms import ValidationError
-from app.models import Product, Silicon 
+from app.models import Product, Silicon, TestID, TestRow 
 
 class CreateSiliconForm(FlaskForm):
     codename = StringField('Silicon Codename', validators=[DataRequired(),

@@ -6,7 +6,7 @@ from app.main.forms import CreateProductForm, CreateSiliconForm, CreateSampleFor
 
 from app.models import Product, Silicon, ProductSilicon, Sample, \
         HardwareRevision, SoftwareComponent, SoftwareRevision, \
-        HardwareSoftware, Test, TestID, TestRun, TestData
+        HardwareSoftware, Test, TestID, TestRow, TestData
 
 
 from app import db

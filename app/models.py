@@ -1,7 +1,8 @@
-from flask import current_app, request, url_for
+from flask import current_app, request, url_for, jsonify
 import datetime
 from app import db
 import app.api.status as status
+from sqlalchemy.exc import SQLAlchemyError
 
 
 def generate_fake():
@@ -10,7 +11,7 @@ def generate_fake():
     HardwareRevision.generate_fake()
     Test.generate_fake(20)
     TestID.generate_fake(100)
-    TestRun.generate_fake(500)
+    TestRow.generate_fake(500)
 
 
 class AddUpdateDelete():
@@ -51,6 +52,7 @@ class Product(db.Model, AddUpdateDelete):
 
     def to_json(self):
         json_product = {
+            'id' : self.id,
             'url' : url_for('api.product', id=self.id),
             'name' : self.name,
             'baseSerial' : self.baseSerial,
@@ -62,13 +64,14 @@ class Product(db.Model, AddUpdateDelete):
             #TODO 'tests' : self.test_ids.query.all()
         }
         return json_product
-
+    '''
     @staticmethod
     def from_json(json_post):
         name = json_post.get('name')
         baseSerial = json_post.get('baseSerial')
         customer = json_post.get('customer')
         description = json_post.get('description')
+    '''
 
 
 
@@ -120,6 +123,7 @@ class Silicon(db.Model, AddUpdateDelete):
 
     def to_json(self):
         json_silicon = {
+            'id' : self.id,
             'codename' : self.codename,
             'productCode' : self.productCode,
             'description' : self.description
@@ -205,7 +209,7 @@ class Sample(db.Model, AddUpdateDelete):
 
 
     def __repr__(self):
-        return "{} ({})".format(self.productID, self.serial)
+        return "{} ({})".format(self.product_id, self.serial)
 
 
 class HardwareRevision(db.Model, AddUpdateDelete):
@@ -411,7 +415,7 @@ class TestID(db.Model, AddUpdateDelete):
 
 
     #Foreign Keys
-    test_rows = db.relationship('TestRun', backref='testid', lazy='dynamic')
+    test_rows = db.relationship('TestRow', backref='testid', lazy='dynamic')
 
     def __init__(self, test_id, hwrev_id, sample):
         self.test_id = test_id
@@ -441,16 +445,16 @@ class TestID(db.Model, AddUpdateDelete):
         return json_testid
 
     @staticmethod
-    def from_json(json_post):
-        request_dict = request.get_json()
+    def from_json(request_dict):
         if not request_dict:
             response = {'message' : 'No input data provided'}
             return response, status.HTTP_400_BAD_REQUEST
         try:
+            sample_id = request_dict['sample_id']
+            sample = Sample.query.get(sample_id)
             testid = TestID(test_id = request_dict['test_id'],
                             hwrev_id = request_dict['hardware_revision_id'],
-                            product_id = request_dict['product_id'],
-                            sample_id = request_dict['sample_id']
+                            sample = sample
                            )
             testid.add(testid)
             query = TestID.query.get(testid.id)
@@ -493,8 +497,8 @@ class TestID(db.Model, AddUpdateDelete):
 
 
 
-class TestRun(db.Model, AddUpdateDelete):
-    __tablename__ = 'testrun'
+class TestRow(db.Model, AddUpdateDelete):
+    __tablename__ = 'testrow'
     id = db.Column(db.Integer, primary_key=True)
     created_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -504,30 +508,29 @@ class TestRun(db.Model, AddUpdateDelete):
                           nullable=False)
 
     #Foreign Keys
-    test_results = db.relationship('TestData', backref='testrun', lazy='dynamic')
+    test_results = db.relationship('TestData', backref='testrow', lazy='dynamic')
 
     def __init__(self, test_id):
         self.test_id = test_id
 
     def to_json(self):
-        json_testrun = {
+        json_testrow = {
             'id' : self.id,
             #TODO 'created' : self.created_date,
             #TODO 'testid' : url_for('api.get_testid', id=test_id),
             #TODO 'results' : test_results.query.all(),
         }
-        return json_testrun
+        return json_testrow
 
     @staticmethod
-    def from_json(json_post):
-        request_dict = request.get_json()
+    def from_json(request_dict):
         if not request_dict:
             response = {'message' : 'No input data provided'}
             return response, status.HTTP_400_BAD_REQUEST
         try:
-            testrun = TestRun(test_id = request_dict['test_id'])
-            testrun.add(testrun)
-            query = TestRun.query.get(testrun.id)
+            testrow = TestRow(test_id = request_dict['test_id'])
+            testrow.add(testrow)
+            query = TestRow.query.get(testrow.id)
             result = query.to_json()
             return result, status.HTTP_201_CREATED
         except SQLAlchemyError as e:
@@ -552,8 +555,8 @@ class TestRun(db.Model, AddUpdateDelete):
                 randint(0, test_id_count - 1)).first()
 
             for row in range(0, randint(0, 100)):
-                testrun = TestRun(testid.id)
-                testrun.add(testrun)
+                testrow = TestRow(testid.id)
+                testrow.add(testrow)
                 attributes = [('BER1',randint(0,100)),
                           ('Voltage', randint(10,14)),
                           ('Current', randint(0,8)),
@@ -568,7 +571,7 @@ class TestRun(db.Model, AddUpdateDelete):
                     attribute = a[0]
                     value = a[1]
                     testData = TestData(
-                        test_run = testrun.id,
+                        test_row = testrow.id,
                         value = value,
                         attribute = attribute,
                         datatype = type(value).__name__)
@@ -585,12 +588,12 @@ class TestData(db.Model, AddUpdateDelete):
     datatype = db.Column(db.String(64))
 
     #Creates the relationship with the TESTRUN table
-    test_run = db.Column(db.Integer, db.ForeignKey('testrun.id'),
+    test_row = db.Column(db.Integer, db.ForeignKey('testrow.id'),
                           nullable=False)
 
-    def __init__(self, test_run, value, attribute,
+    def __init__(self, test_row, value, attribute,
                  datatype=type(value).__name__):
-        self.test_run = test_run
+        self.test_row = test_row
         self.value = value
         self.attribute = attribute
         self.datatype = datatype
@@ -602,18 +605,17 @@ class TestData(db.Model, AddUpdateDelete):
             'value' : self.value,
             'attribute' : self.attribute,
             'datatype' : self.datatype,
-            'test_row' : url_for('api.testrow', id=self.test_run)
+            'test_row' : url_for('api.testrow', id=self.test_row)
         }
         return json_data
 
     @staticmethod
-    def from_json(json_post):
-        request_dict = request.get_json()
+    def from_json(request_dict):
         if not request_dict:
             response = {'message' : 'No input data provided'}
             return response, status.HTTP_400_BAD_REQUEST
         try:
-            testdata = TestData(test_run = request_dict['testrun_id'],
+            testdata = TestData(test_row = request_dict['testrow_id'],
                                value = request_dict['value'],
                                attribute = request_dict['attribute'],
                                datatype = request_dict['datatype'])
@@ -627,7 +629,7 @@ class TestData(db.Model, AddUpdateDelete):
             return resp, status.HTTP_400_BAD_REQUEST
 
     def __repr__(self):
-        return "Attribute: {}, Data: {}".format(self.attribute, self.data)
+        return "Attribute: {}, Data: {}".format(self.attribute, self.value)
 
 
 

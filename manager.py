@@ -2,7 +2,7 @@
 import os
 from app import create_app, db
 from app.models import Product, Silicon, ProductSilicon, Sample
-from app.models import HardwareRevision, Test, TestID, TestRun, TestData
+from app.models import HardwareRevision, Test, TestID, TestRow, TestData
 
 COV = None
 if os.environ.get('FLASK_COVERAGE'):
@@ -22,7 +22,8 @@ def make_shell_context():
     return dict(app=app, db=db, Silicon=Silicon, Product=Product,
                 ProductSilicon = ProductSilicon,
                 HardwareRevision = HardwareRevision,
-                Test = Test, TestID = TestID, TestRun = TestRun,
+                Sample = Sample,
+                Test = Test, TestID = TestID, TestRow = TestRow,
                 TestData = TestData)
 manager.add_command("shell", Shell(make_context=make_shell_context))
 manager.add_command("db", MigrateCommand)
