@@ -20,7 +20,7 @@ def create_app(config_name):
 
 
     from app.main import main as main_blueprint
-    app.register_blueprint(main_blueprint)
+    app.register_blueprint(main_blueprint, url_prefix='')
 
     from app.api import api_bp
     app.register_blueprint(api_bp, url_prefix='/api')

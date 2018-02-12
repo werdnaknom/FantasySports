@@ -24,6 +24,13 @@ class Sample(Resource):
         return sample.to_json()
 api_api.add_resource(Sample, '/sample/<int:id>')
 
+class AddSample(Resource):
+    def post(self):
+        request_dict = request.get_json()
+        return models.Sample.from_json(request_dict)
+api_api.add_resource(AddSample, '/sample/')
+
+
 class HardwareRevision(Resource):
     def get(self, id):
         hwrev = models.HardwareRevision.query.get_or_404(id)
@@ -42,18 +49,16 @@ class TestID(Resource):
         return testid.to_json()
 api_api.add_resource(TestID, '/testid/<int:id>')
 
-class TestIDList(Resource):
+class AddTestID(Resource):
     def get(self):
         #TODO
         return {"TestID" : "List Not Here"}
 
     def post(self):
         request_dict = request.get_json()
-        print("----"*4)
         print(request_dict)
-        print("----"*4)
         return models.TestID.from_json(request_dict)
-api_api.add_resource(TestIDList, '/testid')
+api_api.add_resource(AddTestID, '/testid')
 
 class TestRow(Resource):
     def get(self, id):
@@ -61,11 +66,11 @@ class TestRow(Resource):
         return tr.to_json()
 api_api.add_resource(TestRow, '/testrow/<int:id>')
 
-class TestRowList(Resource):
+class AddTestRow(Resource):
     def post(self):
         request_dict = request.get_json()
         return models.TestRow.from_json(request_dict)
-api_api.add_resource(TestRowList, '/testrow')
+api_api.add_resource(AddTestRow, '/testrow')
 
 class TestData(Resource):
     def get(self, id):
@@ -73,9 +78,9 @@ class TestData(Resource):
         return td.to_json()
 api_api.add_resource(TestData, '/testdata/<int:id>')
 
-class TestDataList(Resource):
+class AddTestData(Resource):
     def post(self):
         request_dict = request.get_json()
         return models.TestData.from_json(request_dict)
-api_api.add_resource(TestDataList, '/testdata')
+api_api.add_resource(AddTestData, '/testdata')
 

@@ -6,7 +6,9 @@ from app.main.forms import CreateProductForm, CreateSiliconForm, CreateSampleFor
 
 from app.models import Product, Silicon, ProductSilicon, Sample, \
         HardwareRevision, SoftwareComponent, SoftwareRevision, \
-        HardwareSoftware, Test, TestID, TestRow, TestData
+        HardwareSoftware, Test, TestID, TestRow, TestData, \
+        SampleHardware
+
 
 
 from app import db
@@ -97,14 +99,23 @@ def addSample(product_id):
     product = Product.query.filter_by(id=product_id).first_or_404()
     form = CreateSampleForm(product=product)
     if form.validate_on_submit():
-        serialNum = form.product.data
-        hardwareRev = form.product.data
+        serialNum = form.serialNum.data
+        hardware_revision_id = form.hardwareRev.data
+        print(dir(form.hardwareRev))
+        print(form.hardwareRev.description)
+        print(form.hardwareRev.gettext)
+        print(form.hardwareRev.id)
+        print(form.hardwareRev.label)
+        print(form.hardwareRev.choices)
 
-        sample = Sample(serial=serialNum, product=product,
-                        hardwareRevision=hardwareRev)
+        sample = Sample(serial=serialNum, product=product)
         sample.add(sample)
 
-        return redirect(url_for('.index'))
+        #Create Sample/HW Revision link
+        samplehw = SampleHardware(sample_id = sample.id,
+                                  hardware_revision_id = hardware_revision_id)
+        samplehw.add(samplehw)
+        return redirect(url_for('.product', product_id=product.id))
     return render_template('basic_form.html', form=form, title=title)
 
 

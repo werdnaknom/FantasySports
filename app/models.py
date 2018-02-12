@@ -193,9 +193,9 @@ class Sample(db.Model, AddUpdateDelete):
     test_ids = db.relationship('TestID', backref='sample',
                                          lazy='dynamic')
 
-    def __init__(self, serial, product):
+    def __init__(self, serial, product_id):
         self.serial = serial
-        self.product_id = product.id
+        self.product_id = product_id
 
     def to_json(self):
         json_sample = {
@@ -206,6 +206,31 @@ class Sample(db.Model, AddUpdateDelete):
             #TODO 'test_ids' : self.test_ids.query.all(),
         }
         return json_sample
+
+    @staticmethod
+    def from_json(request_dict):
+        if not request_dict:
+            response = {'message' : 'No input data provided'}
+            return response, status.HTTP_400_BAD_REQUEST
+        try:
+            serial = request_dict['serial']
+            product_id = request_dict['product_id']
+            hwrev_id = request_dict['hardware_revision_id']
+            sample = Sample(serial = serial,
+                           product_id = product_id)
+            sample.add(sample)
+
+            samplehw = SampleHardware(sample_id = sample.id,
+                                      hardware_revision_id = hwrev_id)
+            samplehw.add(samplehw)
+
+            query = Sample.query.get(sample.id)
+            result = query.to_json()
+            return result, status.HTTP_201_CREATED
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            resp = jsonify({"error" : str(e)})
+            return resp, status.HTTP_400_BAD_REQUEST
 
 
     def __repr__(self):

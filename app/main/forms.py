@@ -51,8 +51,9 @@ class CreateSampleForm(FlaskForm):
 
     def __init__(self, product, *args, **kwargs):
         super(CreateSampleForm, self).__init__(*args, **kwargs)
+        print(product.id, product.name, product.hw_revisions.all())
         self.hardwareRev.choices= [(hwrev.id, hwrev.reworkNumber) for hwrev in
-                                   product.hw_revisions]
+                                   product.hw_revisions.all()]
 
     def set_hardware_choices(self, product):
         self.hardwareRev.choices = [(hwrev.id, hwrev.reworkRev) for hwrev in

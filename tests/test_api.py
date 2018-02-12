@@ -60,9 +60,42 @@ def postTestData(url, testrow_id, value, attribute, datatype):
     dataDict = postToServer(final_url, json_data)
     return dataDict
 
+def create_sample(url, product_id, serial, hardware_revision_id):
+    final_url = "{}api/sample/".format(url)
+    json_data = {
+        "product_id" : product_id,
+        "serial" : serial,
+        "hardware_revision_id" : hardware_revision_id,
+    }
+    dataDict = postToServer(final_url, json_data)
+    return dataDict
 
 
 if __name__ == "__main__":
+    seed()
+    #Grab a product
+    #p = Product.query.first()
+
+    #Create a sample
+    sample_json = create_sample(baseurl, product_id = 1,
+                                serial = "12345",
+                                hardware_revision_id = 3)
+
+    test_id = getTest(baseurl, 10)
+
+    testid = postTestID(url=baseurl, test_id=test_id,
+                        hwrev_id = hwrev_id,
+                        sample_id = sample_id)
+    testid_id = testid['id']
+
+    testrow_id = postTestRow(url=baseurl, testid_id = testid_id)
+
+
+
+
+
+
+    '''
     baseurl = "http://127.0.0.1:5000/"
     #Get Sample from server
     sample_id = getSample(baseurl, 101)
@@ -91,6 +124,7 @@ if __name__ == "__main__":
                                     value = value,
                                     attribute = attribute,
                                     datatype = datatype)
+    '''
 
 
 
