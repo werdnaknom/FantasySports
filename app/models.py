@@ -4,7 +4,6 @@ from app import db
 import app.api.status as status
 from sqlalchemy.exc import SQLAlchemyError
 
-
 def generate_fake():
     Silicon.insert_silicon()
     Product.generate_fake(100)
@@ -26,6 +25,40 @@ class AddUpdateDelete():
         db.session.delete(resource)
         return db.session.commit()
 
+#Association Tables
+#Product / Silicon
+productsilicon = db.Table('product_silicon_association',
+                                db.Column('product_id', db.Integer,
+                                          db.ForeignKey('product.id')),
+                                db.Column('silicon_id', db.Integer,
+                                          db.ForeignKey('silicon.id'))
+                               )
+
+# Sample / Hardware Revision
+samplehardware = db.Table('sample_hardware_association',
+                                db.Column('sample_id', db.Integer,
+                                          db.ForeignKey('sample.id'),
+                                         primary_key = True),
+                                db.Column('hardware_revision_id', db.Integer,
+                                          db.ForeignKey(
+                                              'hardware_revision.id'),
+                                         primary_key = True)
+                               )
+# Hardware Revision / Software Components
+hardwaresoftware = db.Table('hardware_software_association',
+                                db.Column('software_component_id', db.Integer,
+                                          db.ForeignKey(
+                                              'software_component.id'),
+                                         primary_key = True),
+                                db.Column('hardware_revision_id', db.Integer,
+                                          db.ForeignKey(
+                                              'hardware_revision.id'),
+                                         primary_key = True)
+                         )
+
+
+
+
 class Product(db.Model, AddUpdateDelete):
     __tablename__ = 'product'
     id = db.Column(db.Integer, primary_key=True)
@@ -36,8 +69,11 @@ class Product(db.Model, AddUpdateDelete):
 
 
     #Foreign Relationships
-    silicon = db.relationship('ProductSilicon', backref='product',
-                                     lazy='dynamic')
+    silicon = db.relationship('Silicon', secondary = productsilicon,
+                                     lazy='subquery',
+                             backref = db.backref('products',
+                                                  lazy='dynamic')
+                             )
     samples = db.relationship('Sample', backref='product', lazy='dynamic')
     hw_revisions = db.relationship('HardwareRevision',
                               backref='product', lazy='dynamic')
@@ -98,9 +134,10 @@ class Product(db.Model, AddUpdateDelete):
 
             #Adds silicon to product
             for i in range(0,randint(1,3)):
+
                 silicon = Silicon.query.offset(randint(0,silicon_count-1)).first()
-                ps = ProductSilicon(p.id, silicon.id)
-                ps.add(ps)
+                silicon.products.append(p)
+                silicon.update()
 
 
 
@@ -113,8 +150,8 @@ class Silicon(db.Model, AddUpdateDelete):
     description = db.Column(db.String(256), index=True)
 
     #Foreign Relationships
-    siliconProducts = db.relationship('ProductSilicon', backref='silicon',
-                                                            lazy='dynamic')
+    #siliconProducts = db.relationship('ProductSilicon', backref='silicon',
+    #                                                        lazy='dynamic')
 
     def __init__(self, codename, productCode, description=""):
         self.codename = codename
@@ -157,27 +194,6 @@ class Silicon(db.Model, AddUpdateDelete):
         return "{} ({})".format(self.codename, self.productCode)
 
 
-
-class ProductSilicon(db.Model, AddUpdateDelete):
-    __tablename__ = 'product_silicon'
-    id = db.Column(db.Integer, primary_key=True)
-
-    #Creates the relationship with the PRODUCT table
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'),
-                          nullable=False)
-    #Creates the relationship with the SILICON table
-    silicon_id = db.Column(db.Integer, db.ForeignKey('silicon.id'),
-                          nullable=False)
-
-    def __init__(self, product, silicon):
-        self.product_id = product
-        self.silicon_id = silicon
-
-    def __repr__(self):
-        return "{} {}".format(self.product, self.silicon)
-
-
-
 class Sample(db.Model, AddUpdateDelete):
     __tablename__ = 'sample'
     id = db.Column(db.Integer, primary_key=True)
@@ -188,8 +204,14 @@ class Sample(db.Model, AddUpdateDelete):
                           nullable=False)
 
     #Foreign Keys
-    hardware_revisions = db.relationship('SampleHardware', backref='sample',
-                                         lazy='dynamic')
+    hardware_revisions = db.relationship('HardwareRevision',
+                                         secondary = samplehardware,
+                                         lazy = 'subquery',
+                                         backref = db.backref('samples',
+                                                              lazy = 'subquery'
+                                                             )
+                                        )
+
     test_ids = db.relationship('TestID', backref='sample',
                                          lazy='dynamic')
 
@@ -220,9 +242,9 @@ class Sample(db.Model, AddUpdateDelete):
                            product_id = product_id)
             sample.add(sample)
 
-            samplehw = SampleHardware(sample_id = sample.id,
-                                      hardware_revision_id = hwrev_id)
-            samplehw.add(samplehw)
+            hwrev = HardwareRevision.query.get_or_404(hwrev_id)
+            hwrev.samples.append(sample)
+            hwrev.update()
 
             query = Sample.query.get(sample.id)
             result = query.to_json()
@@ -249,7 +271,12 @@ class HardwareRevision(db.Model, AddUpdateDelete):
                           nullable=False)
 
     #Foreign Relationships
-    samples = db.relationship('SampleHardware', backref='hardware_revision', lazy='dynamic')
+    software = db.relationship('SoftwareComponent', secondary=hardwaresoftware,
+                               lazy = 'dynamic',
+                               backref = db.backref('hardware_revision',
+                                                    lazy = 'dynamic'))
+
+
     test_ids = db.relationship('TestID', backref='hardware_revision', lazy='dynamic')
 
     def __init__(self, ipn, reworkNumber, description, product_id):
@@ -294,26 +321,11 @@ class HardwareRevision(db.Model, AddUpdateDelete):
                 hwrev.add(hwrev)
                 for s in range(0, randint(0,10)):
                     sample = Sample(serial=forgery_py.basic.string.hexdigits,
-                            product=product)
+                            product_id=product.id)
                     sample.add(sample)
-                    shw = SampleHardware(sample.id, hwrev.id)
-                    shw.add(shw)
 
-
-
-class SampleHardware(db.Model, AddUpdateDelete):
-    __tablename__ = 'sample_hardware'
-    id = db.Column(db.Integer, primary_key=True)
-
-    #Creates the relationship with the SAMPLE table
-    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id'),
-                          nullable=False)
-    #Creates the relationship with the HARDWARE REVISION table
-    hw_revision_id = db.Column(db.Integer, db.ForeignKey('hardware_revision.id'),
-                          nullable=False)
-    def __init__(self, sample_id, hardware_revision_id):
-        self.sample_id = sample_id
-        self.hw_revision_id = hardware_revision_id
+                    hwrev.samples.append(sample)
+                    hwrev.update()
 
 
 
@@ -330,9 +342,10 @@ class SoftwareComponent(db.Model, AddUpdateDelete):
                           nullable=False)
 
     #Foreign Relationships
-    hardware_revisions = db.relationship('HardwareSoftware', backref='software_component', lazy='dynamic')
-    software_revisions = db.relationship('HardwareSoftware',
-                                           backref='software_revision', lazy='dynamic')
+
+    software_revisions = db.relationship('SoftwareRevision',
+                                           backref='software_revision',
+                                         lazy='dynamic')
 
     def __init__(self, product_id, ipn="default", sw_id="default",
                  description="default"):
@@ -360,21 +373,6 @@ class SoftwareRevision(db.Model, AddUpdateDelete):
         self.reworkNumber = reworkNumber
         self.description = description
 
-
-class HardwareSoftware(db.Model, AddUpdateDelete):
-    __tablename__ = 'hardware_software'
-    id = db.Column(db.Integer, primary_key=True)
-
-    #Creates the relationship with the HARDWARE REVISION table
-    hw_revision_id = db.Column(db.Integer, db.ForeignKey('hardware_revision.id'),
-                          nullable=False)
-    #Creates the relationship with the SOFTWARE COMPONENT table
-    software_id = db.Column(db.Integer, db.ForeignKey('software_component.id'),
-                          nullable=False)
-
-    def __init__(self, hw_revision_id, software_component_id):
-        self.hw_revision_id = hw_revision_id
-        self.software_id = software_component_id
 
 class Test(db.Model, AddUpdateDelete):
     __tablename__ = 'test'
@@ -440,13 +438,15 @@ class TestID(db.Model, AddUpdateDelete):
 
 
     #Foreign Keys
-    test_rows = db.relationship('TestRow', backref='testid', lazy='dynamic')
+    test_rows = db.relationship('TestRow',
+                                backref='testid',
+                                lazy='subquery')
 
-    def __init__(self, test_id, hwrev_id, sample):
+    def __init__(self, test_id, hwrev_id, product_id, sample_id):
         self.test_id = test_id
         self.hardware_revision_id = hwrev_id
-        self.product_id = sample.product_id
-        self.sample_id = sample.id
+        self.product_id = product_id
+        self.sample_id = sample_id
 
     def to_json(self):
         json_testid = {
@@ -505,21 +505,18 @@ class TestID(db.Model, AddUpdateDelete):
         seed()
         for _ in range(0, count):
             test = Test.query.offset(randint(0, test_count-1)).first()
-            hardware_rev = HardwareRevision.query.offset(randint(0, hwrev_count
-                                                                 -1)).first()
-            sample_count= hardware_rev.samples.count()
+            rand = randint(0, hwrev_count - 1)
+            hardware_rev = HardwareRevision.query.get(rand)
+            sample_count = len(hardware_rev.samples)
+            print(_, sample_count)
             if sample_count != 0:
-                sample = hardware_rev.samples.offset( \
-                    randint(0, sample_count -1)).first()
+                sample = hardware_rev.samples[randint(0, sample_count -1 )]
+                product = sample.product
                 testid = TestID(test_id = test.id, hwrev_id=hardware_rev.id,
-                               sample = sample.sample)
+                               product_id = product.id, sample_id = sample.id)
                 testid.add(testid)
-
             else:
-                continue
-
-
-
+                pass
 
 
 class TestRow(db.Model, AddUpdateDelete):
@@ -533,7 +530,9 @@ class TestRow(db.Model, AddUpdateDelete):
                           nullable=False)
 
     #Foreign Keys
-    test_results = db.relationship('TestData', backref='testrow', lazy='dynamic')
+    test_results = db.relationship('TestData',
+                                   backref='testrow',
+                                   lazy='subquery')
 
     def __init__(self, test_id):
         self.test_id = test_id

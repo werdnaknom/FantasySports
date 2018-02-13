@@ -4,10 +4,9 @@ current_app, make_response
 from app.main import main
 from app.main.forms import CreateProductForm, CreateSiliconForm, CreateSampleForm
 
-from app.models import Product, Silicon, ProductSilicon, Sample, \
+from app.models import Product, Silicon, Sample, \
         HardwareRevision, SoftwareComponent, SoftwareRevision, \
-        HardwareSoftware, Test, TestID, TestRow, TestData, \
-        SampleHardware
+        Test, TestID, TestRow, TestData 
 
 
 
@@ -60,8 +59,8 @@ def addProduct():
         product.add(product)
         #Gather Silicon Information from Form
         silicon_id = form.silicon.data
-        ps = ProductSilicon(product=product.id, silicon=silicon_id)
-        ps.add(ps)
+        #TODO: Replace ps = ProductSilicon(product=product.id, silicon=silicon_id)
+        #ps.add(ps)
 
 
         #Update product on database
@@ -110,11 +109,9 @@ def addSample(product_id):
 
         sample = Sample(serial=serialNum, product=product)
         sample.add(sample)
+        hwrev = HardwareRevision.query.get_or_404(hardware_revision_id)
+        hwrev.samples.append(sample)
 
-        #Create Sample/HW Revision link
-        samplehw = SampleHardware(sample_id = sample.id,
-                                  hardware_revision_id = hardware_revision_id)
-        samplehw.add(samplehw)
         return redirect(url_for('.product', product_id=product.id))
     return render_template('basic_form.html', form=form, title=title)
 
