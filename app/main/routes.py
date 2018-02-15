@@ -58,12 +58,9 @@ def addProduct():
         product.add(product)
         #Gather Silicon Information from Form
         silicon_id = form.silicon.data
-        #TODO: Replace ps = ProductSilicon(product=product.id, silicon=silicon_id)
-        #ps.add(ps)
 
-
-        #Update product on database
-        product.silicon_id = ps.id
+        silicon = Silicon.query.get(silicon_id)
+        product.silicon.append(silicon)
         product.update()
 
         #Create Default HW Revision
@@ -82,10 +79,8 @@ def addProduct():
                                 description="Initial Revision")
         swrev.add(swrev)
 
-        #Add the relationship between HW revision and SW revisions
-        hwsw =  HardwareSoftware(hw_revision_id = hwrev.id,
-                                 software_component_id = sw.id)
-        hwsw.add(hwsw)
+        hwrev.software.append(sw)
+        hwrev.update()
 
         return redirect(url_for('.product',product_id=product.id))
     return render_template('basic_form.html', form=form, title=title) 
@@ -123,9 +118,8 @@ def sample(sample_id):
 @main.route('/hardwarerevision/<int:hardware_revision>',
             methods=['GET', 'POST'])
 def hardware_revision(hardware_revision):
-    title = "Sample ID #%d" % sample_id
+    title = "hardware revision ID #%d" % hardware_revision
 
-    sample = Sample.query.filter_by(id=sample_id).first_or_404()
     return render_template('hardware_revision.html')
 
 
