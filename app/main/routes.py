@@ -17,7 +17,6 @@ from app import db
 def index():
     products = Product.query.all()
     silicon = Silicon.query.all()
-    ps = ProductSilicon.query.all()
     return render_template('index.html', products=products)
 
 @main.route('/product/<int:product_id>', methods=['GET', 'POST'])
@@ -100,14 +99,8 @@ def addSample(product_id):
     if form.validate_on_submit():
         serialNum = form.serialNum.data
         hardware_revision_id = form.hardwareRev.data
-        print(dir(form.hardwareRev))
-        print(form.hardwareRev.description)
-        print(form.hardwareRev.gettext)
-        print(form.hardwareRev.id)
-        print(form.hardwareRev.label)
-        print(form.hardwareRev.choices)
 
-        sample = Sample(serial=serialNum, product=product)
+        sample = Sample(serial=serialNum, product_id=product.id)
         sample.add(sample)
         hwrev = HardwareRevision.query.get_or_404(hardware_revision_id)
         hwrev.samples.append(sample)

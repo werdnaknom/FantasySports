@@ -1,10 +1,11 @@
 from flask_restful import Resource, abort, fields, marshal_with, reqparse, Api
-from flask import request
+from flask import request, url_for
 from app.api import status
 from app import db
 from sqlalchemy.exc import SQLAlchemyError
 from app.api import api_api
 from app import models
+from requests import post, get
 
 class Product(Resource):
     def get(self, id):
@@ -56,7 +57,7 @@ class AddTestID(Resource):
     def post(self):
         request_dict = request.get_json()
         return models.TestID.from_json(request_dict)
-api_api.add_resource(AddTestID, '/testid')
+api_api.add_resource(AddTestID, '/testid', endpoint="api.addtestid")
 
 class TestRow(Resource):
     def get(self, id):
@@ -82,39 +83,38 @@ class AddTestData(Resource):
         return models.TestData.from_json(request_dict)
 api_api.add_resource(AddTestData, '/testdata')
 
-class TestInformation(Resource):
+class StartTest(Resource):
     def post(self):
         new_sample = False
         request_dict = request.get_json()
-        test = models.Test.query.filter_by(name=request_dict['name']).first()
-        if test == None:
+        if not request_dict:
+            response = {'message' : 'No input data provided'}
+            return response, status.HTTP_400_BAD_REQUEST
+
+        test = models.Test.query.filter_by(name=request_dict['test_name']).first()
+        print("test", test)
+        if not test:
             response = {"message" : "Test doesn't exist"}
             return response, status.HTTP_400_BAD_REQUEST
 
-        product = models.Product.query.filter_by(baseSerial=
-                                           request_dict['baseSerial']).first()
-        if product == None:
-            response = {"message" : "Product doesn't exist"}
-            return response, status.HTTP_400_BAD_REQUEST
-        else:
+        sample_serial = request_dict['serial']
+        sample = models.Sample.query.filter_by(serial = sample_serial).first()
 
-            hwrev_number = request_dict['hwrev']
-            hwrev = product.hw_revisions.filter_by(
-                reworkNumber = hwrev_number).first()
-            if hwrev == None:
-                response = {"message" : "Hardware Revision doesn't exist"}
-                return response, status.HTTP_400_BAD_REQUEST
-            else:
-                product_id = product.id
-                hwrev_id = hwrev.id
-                serial = request_dict['serial']
-                sample = hwrev.sample.filter_by(serial = serial)
-                if sample == None:
-                    sample_dict = {
-                        "serial" : serial,
-                        "product_id" : product_id,
-                        "hardware_revision_id" : hwrev_id,
-                    }
-                    return models.Sample.from_json(sample_dict)
-                else:
-                    return sample.to_json()
+        if not sample:
+            response = {"message" : "Sample doesn't exist"}
+            return response, status.HTTP_400_BAD_REQUEST
+
+        hwrev_reworkNumber = request_dict['hwrev']
+        hwrev = sample.hardware_revisions.filter_by(
+            reworkNumber = hwrev_reworkNumber).first()
+
+        if not hwrev:
+            response = {"message" : "Hardware Revision doesn't exist"}
+            return response, status.HTTP_400_BAD_REQUEST
+        testid_json = {
+            "sample_id" : sample.id,
+            "test_id" : test.id,
+            "hardware_revision_id" : hwrev.id,
+        }
+        return models.TestID.from_json(testid_json)
+api_api.add_resource(StartTest, '/starttest')

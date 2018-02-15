@@ -206,9 +206,9 @@ class Sample(db.Model, AddUpdateDelete):
     #Foreign Keys
     hardware_revisions = db.relationship('HardwareRevision',
                                          secondary = samplehardware,
-                                         lazy = 'subquery',
+                                         lazy = 'dynamic',
                                          backref = db.backref('samples',
-                                                              lazy = 'subquery'
+                                                              lazy = 'dynamic'
                                                              )
                                         )
 
@@ -477,9 +477,11 @@ class TestID(db.Model, AddUpdateDelete):
         try:
             sample_id = request_dict['sample_id']
             sample = Sample.query.get(sample_id)
+            print(sample)
             testid = TestID(test_id = request_dict['test_id'],
                             hwrev_id = request_dict['hardware_revision_id'],
-                            sample = sample
+                            product_id = sample.product_id,
+                            sample_id = sample.id
                            )
             testid.add(testid)
             query = TestID.query.get(testid.id)

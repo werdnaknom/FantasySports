@@ -29,8 +29,7 @@
 					    </tr>
 				    </thead>
 				    <tbody>
-				    {% for s in product.silicon %}
-				    {% set silicon = Silicon.query.filter_by(id=s.silicon_id).first_or_404() %}
+				    {% for silicon in product.silicon %}
 					    <tr>
 						    <td>{{loop.index}}</td>
 						    <td>{{silicon.codename}}</td>
@@ -60,13 +59,12 @@
 						    <td>
 							    <a href={{url_for('main.sample', sample_id=s.id)}}> {{s.serial}} </a>
 						    </td>
-						    {% for swhw in s.hardware_revisions.all() %}
-						    {% set hwrev = HardwareRevision.query.filter_by(id = swhw.hw_revision_id).first_or_404() %}
 						        <td>
+								{% for hwrev in s.hardware_revisions.all() %}
 								<a href={{url_for('main.hardware_revision',
 	      hardware_revision=hwrev.id)}}> {{hwrev.reworkNumber}} </a>
+								{% endfor %}
 							</td>
-						    {% endfor %}
 						    <td>
 						    {% if s.test_ids.all() %}
 						    	{% for testid in s.test_ids.all() %}

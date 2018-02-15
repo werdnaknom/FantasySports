@@ -4,6 +4,7 @@ import forgery_py
 from collections import namedtuple
 
 def checkResponse(resp):
+    #print(resp)
     print(resp.status_code, resp.json())
 
 def getFromServer(url):
@@ -13,6 +14,7 @@ def getFromServer(url):
 
 def postToServer(url, json_data):
     r = post(url=url, json=json_data)
+    print(r)
     checkResponse(r)
     return r.json()
 
@@ -70,8 +72,35 @@ def create_sample(url, product_id, serial, hardware_revision_id):
     dataDict = postToServer(final_url, json_data)
     return dataDict
 
+def checkInformation(url, test_name, baseSerial, hwrev_number, serial):
+    final_url = "{}api/starttest/".format(url)
+    print(final_url)
+    json_data = {
+        "test_name" : test_name,
+        "baseSerial" : baseSerial,
+        "hardware_revision" : hwrev_number,
+        "serial" : serial,
+    }
+    dataDict = postToServer(final_url, json_data)
+    return dataDict
+
 
 if __name__ == "__main__":
+    baseurl = "http://127.0.0.1:5000/"
+    testname = "Arizona"
+    baseSerial = "9368FE"
+    hwrev_number = 0
+    serial = '0123456789abcdefABCDEF'
+    info = checkInformation(url = baseurl,
+                     test_name = testname,
+                     baseSerial = baseSerial,
+                     hwrev_number = hwrev_number,
+                     serial = serial)
+    print(info)
+
+
+
+    '''
     seed()
     #Grab a product
     #p = Product.query.first()
@@ -89,6 +118,7 @@ if __name__ == "__main__":
     testid_id = testid['id']
 
     testrow_id = postTestRow(url=baseurl, testid_id = testid_id)
+    '''
 
 
 
